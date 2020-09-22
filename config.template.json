@@ -1,0 +1,18 @@
+{
+    "mail":{
+        "host": "<server>",
+        "port": 587,
+        "secure": false,
+        "auth": {
+            "user": "<user>",
+            "pass": "<password>"
+        },
+        "tls": {
+            "rejectUnauthorized": false,
+            "ciphers":"SSLv3"
+        }
+    },
+    "mailFrom": "BJR",
+    "outFileCodes": "./out/codes.txt",
+    "outFileMatch": "./out/match.txt"
+}
