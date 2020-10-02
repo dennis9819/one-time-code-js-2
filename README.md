@@ -76,6 +76,7 @@ Dazu muss golgender Befehl ausgeführt werden:
 ts-node .\index.ts --privkey private.key --decrypt --safe .\out\credentials.json
 
 ## Config-Datei
+```
 {
     "mail":{
         "host": "<mailserver>",
@@ -91,10 +92,9 @@ ts-node .\index.ts --privkey private.key --decrypt --safe .\out\credentials.json
         }
     },
     "mailFrom": "<absender name>",
-    "outFileCodes": "<ausgabedatei codes>",
     "outFileMatch": "<ausgabedatei regex>"
 }
-
+```
 
 ## Syntax
 
@@ -106,6 +106,8 @@ z.B. `ts-node .\index.ts --privkey private.key --pubkey public.key --genkey`
 ==> Codes Erzeugen und versenden
 `ts-node .\index.ts --config <path-to-config-key> --pubkey <path-to-public-key> --send --safe .\out\credentials.json --mails <path-to-mail-list> -html <path-to-html-template>`
 
+Achtung: Es wird im Safe geprüft, ob Mailadressen bereits "bedient" wurden. Sollte dies der Fall sein, werden keine Mails an diese Adresse gesendet. Dies lässt sich mit dem Schalter `--force` umgehen.
+
 z.B. `ts-node .\index.ts --config config.json --pubkey public.key --send --safe .\out\credentials.json --mails mail.txt -html template.html`
 
 ==> Safe entschlüsseln
@@ -113,8 +115,13 @@ z.B. `ts-node .\index.ts --config config.json --pubkey public.key --send --safe 
 
 z.B. `ts-node .\index.ts --privkey private.key --decrypt --safe .\out\credentials.json`
 
-## Kompillierte Binaries
-Die Kompilierten Binaries sind für Linux, MacOS und Windoof verfügbar: [Binaries](https://gitlab.dennisgunia.de/dennisgunia/one-time-code-js/-/tree/master/bin)`
+### Erweiterte Schalter
+
+ - `--dryrun` : Mails werden nicht versendet und der Safe wird nicht verändert.
+ - `--force` : Alle Codes werden neu generiert und alle mails werden gesendet. Ignoriere bereits gesendete mails.
+
+## Gepackte Binaries
+Die gepackten Binaries sind für Linux, MacOS und Windoof verfügbar: [Binaries](https://gitlab.dennisgunia.de/dennisgunia/one-time-code-js/-/tree/master/bin)
 
 Die befehle ändern sich wie folgt:
 
@@ -132,3 +139,55 @@ z.B. `./opentoken --config config.json --pubkey public.key --send --safe .\out\c
 `./opentoken --privkey <path-to-private-key> --decrypt --safe .\out\credentials.json`
 
 z.B. `./opentoken --privkey private.key --decrypt --safe .\out\credentials.json`
+
+## Ausführen des Quellcodes
+Der Sourcecode kann auch über ts-node ausgeführt werden.
+Dazu ist Node.js Version 12 zu verwenden
+
+`nvm use 12`
+
+Zum Ausführen sind folgende npm Pakete notwendig:
+ - typescript
+ - tslint
+ - ts-node
+
+Installerien sie diese mit:
+`npm install -g typescript tslint ts-node`
+
+Clonen sie dieses Repository auf ihren lokalen rechner und wechseln sie anschließend in dessen verzeichniss:
+
+`git clone https://gitlab.dennisgunia.de/dennisgunia/one-time-code-js.git`
+
+`cd one-time-code-js`
+
+Installieren sie alle lokalen npm Pakete
+
+`npm install`
+
+Kopieren Sie die Config-Template und passen Sie die SMTP-Zugangsdaten an:
+
+`cp config.template.json config.json`
+
+`vim config.json`
+
+Das Skript kann nun über `npm run-script exec` oder `ts-node index.js` ausgeführt werden.
+
+## Packen des Quellcodes
+Zum Packen des Quellcodes ist das npm-Paket `pkg` zu installieren:
+
+`npm install -g pkg`
+
+Anschließend wird der Code in JS transpiliert und durch pkg gepackt:
+
+`npm run-script build`
+
+Die Binaries werden in `./bin` gespeichert. Diese sind auch auf Systemen ohne node.js ausführbar.
+
+## Was landet im Safe?
+Im safe landen die verschlüsselten Zuordnungen zwischen Codes und Mailadressen.
+
+Zudem werden die verwendeten Codes und die bereits gesendeten Mailadressen seperat voneinander und zufällig gemischt in Klartext gespeichert.
+
+Dies ermöglicht es, nachträglich benutzer hinzuzufügen, ohne allen anderen neue Mails oder gar neue Codes zukommen lassen zu müssen.
+
+Es ist jedoch nocht empfohlen, nachträglich mails hinzuzufügen, da dies, abhängig von der Menge der gleichzeitig hinzugefügten Adressen eine grobe oder ggf. auch sehr genaue zuordnung zwischen Code und Mail der Nachzügler möglich ist. 

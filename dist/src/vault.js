@@ -60,11 +60,14 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.SecureVault = void 0;
 var crypto = __importStar(require("crypto"));
+var uuid = __importStar(require("uuid"));
 var path_1 = __importDefault(require("path"));
 var fs = __importStar(require("fs"));
 var crypto_1 = require("crypto");
+var vaultVersion = 'v1.2';
 var SecureVault = (function () {
     function SecureVault(publicKey, privateKey) {
+        this.storage = [];
         this.safe = {
             items: [],
             publicKey: publicKey ? fs.readFileSync(path_1.default.resolve(publicKey)) : undefined,
@@ -75,7 +78,7 @@ var SecureVault = (function () {
     }
     SecureVault.prototype.pushData = function (data) {
         return __awaiter(this, void 0, void 0, function () {
-            var txtData, key, iv, cipher, encrypted, buffer, asym_encrypted;
+            var txtData, key, iv, cipher, encrypted, buffer, asym_encrypted, u;
             return __generator(this, function (_a) {
                 txtData = JSON.stringify(data);
                 key = crypto.randomBytes(32);
@@ -88,27 +91,45 @@ var SecureVault = (function () {
                     throw new Error("Public Key not found");
                 }
                 asym_encrypted = crypto.publicEncrypt(this.safe.publicKey, buffer);
+                u = uuid.v4();
                 this.safe.items.push({
+                    u: u,
                     d: encrypted.toString('hex'),
                     k: asym_encrypted.toString("base64"),
                     iv: iv.toString('hex')
                 });
-                return [2];
+                return [2, u];
             });
         });
     };
     SecureVault.prototype.saveData = function (path) {
         return __awaiter(this, void 0, void 0, function () {
             return __generator(this, function (_a) {
-                fs.writeFileSync(path, JSON.stringify(this.safe.items));
+                fs.writeFileSync(path, JSON.stringify({
+                    version: vaultVersion,
+                    vault: this.safe.items,
+                    storage: this.storage
+                }));
                 return [2];
             });
         });
     };
     SecureVault.prototype.loadData = function (path) {
         return __awaiter(this, void 0, void 0, function () {
+            var loaded;
             return __generator(this, function (_a) {
-                this.safe.items = JSON.parse(fs.readFileSync(path, 'utf8'));
+                loaded = JSON.parse(fs.readFileSync(path, 'utf8'));
+                switch (loaded.version) {
+                    case 'v1.1':
+                        this.safe.items = loaded.vault;
+                        break;
+                    case 'v1.2':
+                        this.safe.items = loaded.vault;
+                        this.storage = loaded.storage;
+                        break;
+                    default:
+                        console.error("Unknown or unsupported vault file version: " + loaded.version);
+                }
                 return [2];
             });
         });
@@ -150,6 +171,51 @@ var SecureVault = (function () {
             fs.writeFileSync(privateKeyDir, privateKey);
             fs.writeFileSync(publicKeyDir, publicKey);
         });
+    };
+    SecureVault.prototype.pushStorage = function (tag, data) {
+        if (vaultVersion !== 'v1.2') {
+            throw new Error("Storage not supported in " + vaultVersion);
+        }
+        else {
+            var objJsonStr = JSON.stringify(data);
+            var objJsonB64 = Buffer.from(objJsonStr).toString("base64");
+            this.storage.push({
+                u: uuid.v4(),
+                d: objJsonB64,
+                t: tag
+            });
+        }
+    };
+    SecureVault.prototype.setStorage = function (suuid, data) {
+        if (vaultVersion !== 'v1.2') {
+            throw new Error("Storage not supported in " + vaultVersion);
+        }
+        else {
+            var objJsonStr = JSON.stringify(data);
+            var objJsonB64 = Buffer.from(objJsonStr, "utf8").toString("base64");
+            this.storage.filter(function (el) { return el.u == suuid; })[0].d = objJsonB64;
+        }
+    };
+    SecureVault.prototype.getStorage = function (suuid) {
+        if (vaultVersion !== 'v1.2') {
+            throw new Error("Storage not supported in " + vaultVersion);
+        }
+        else {
+            var data = this.storage.filter(function (el) { return el.u == suuid; })[0];
+            var objJsonB64 = new Buffer(data.d, 'base64');
+            return JSON.parse(objJsonB64.toString('utf8'));
+        }
+    };
+    SecureVault.prototype.findStorage = function (tag) {
+        if (vaultVersion !== 'v1.2') {
+            throw new Error("Storage not supported in " + vaultVersion);
+        }
+        else {
+            return this.storage.filter(function (el) { return el.t == tag; });
+        }
+    };
+    SecureVault.prototype.clearVault = function () {
+        this.safe.items = [];
     };
     return SecureVault;
 }());

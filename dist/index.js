@@ -22,7 +22,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 var fs = __importStar(require("fs"));
 var generate_1 = require("./src/generate");
 var vault_1 = require("./src/vault");
-var configPath = "", action = -1, pubKey = "", privKey = "", safeFile = "", mails = "", html = "";
+var configPath = "", action = -1, pubKey = "", privKey = "", safeFile = "", mails = "", html = "", dryrun = false, force = false;
 for (var i = 1; i < process.argv.length; i++) {
     if (process.argv[i] === "--config") {
         if (i + 1 < process.argv.length && !process.argv[i + 1].startsWith("--")) {
@@ -81,6 +81,12 @@ for (var i = 1; i < process.argv.length; i++) {
     if (process.argv[i] === "--genkey") {
         action = 3;
     }
+    if (process.argv[i] === "--dryrun") {
+        dryrun = true;
+    }
+    if (process.argv[i] === "--force") {
+        force = true;
+    }
 }
 if (action == -1) {
     throw new Error("No Action specified");
@@ -107,18 +113,39 @@ if (action == 1) {
     var dataSafe_1 = new vault_1.SecureVault(pubKey, privKey);
     var confRaw = fs.readFileSync(configPath, 'utf8');
     var config = {};
+    var addition_1 = false;
+    config = JSON.parse(confRaw);
+    if (fs.existsSync(safeFile)) {
+        dataSafe_1.loadData(safeFile);
+        config.usedTokens = dataSafe_1.getStorage(dataSafe_1.findStorage("usedTokens")[0].u);
+        config.usedMails = dataSafe_1.getStorage(dataSafe_1.findStorage("usedMails")[0].u);
+        addition_1 = true;
+    }
+    else {
+        config.usedTokens = [];
+        config.usedMails = [];
+    }
     try {
-        config = JSON.parse(confRaw);
         config.inFileMail = mails;
         config.htmlPath = html;
+        config.dryrun = dryrun;
+        config.force = force;
     }
     catch (error) {
         console.error("Cannote read config file!");
         process.exit(100);
     }
     generate_1.generateToken(config, dataSafe_1).then(function (el) {
-        console.log(el);
-        dataSafe_1.saveData(safeFile);
+        if (addition_1) {
+            dataSafe_1.setStorage(dataSafe_1.findStorage("usedTokens")[0].u, el.codes);
+            dataSafe_1.setStorage(dataSafe_1.findStorage("usedMails")[0].u, el.mails);
+            dataSafe_1.saveData(safeFile);
+        }
+        else {
+            dataSafe_1.pushStorage('usedTokens', el.codes);
+            dataSafe_1.pushStorage('usedMails', el.mails);
+            dataSafe_1.saveData(safeFile);
+        }
     }).catch(function (err) { return console.error("error", err); });
 }
 else if (action == 2) {

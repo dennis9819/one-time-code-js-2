@@ -54,55 +54,66 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
         if (op[0] & 5) throw op[1]; return { value: op[0] ? op[1] : void 0, done: true };
     }
 };
+var __spreadArrays = (this && this.__spreadArrays) || function () {
+    for (var s = 0, i = 0, il = arguments.length; i < il; i++) s += arguments[i].length;
+    for (var r = Array(s), k = 0, i = 0; i < il; i++)
+        for (var a = arguments[i], j = 0, jl = a.length; j < jl; j++, k++)
+            r[k] = a[j];
+    return r;
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.generateToken = void 0;
 var fs = __importStar(require("fs"));
+var path = __importStar(require("path"));
 var nodemailer = __importStar(require("nodemailer"));
+var cliProgress = __importStar(require("cli-progress"));
 var shuffle_1 = require("./util/shuffle");
 var token_1 = require("./util/token");
 var Handlebars = __importStar(require("handlebars"));
+var mailParser_1 = require("./mailParser");
 function generateToken(config, dataSafe) {
-    var pr = new Promise(function (resolve, error) {
-        var mailArray = [];
-        var readline = require('readline'), instream = fs.createReadStream(config.inFileMail), outstream = new (require('stream'))(), rl = readline.createInterface(instream, outstream);
-        rl.on('line', function (line) {
-            console.log(line);
-            mailArray.push({
-                mail: line.substr(0, line.indexOf(";")),
-                name: line.substr(line.indexOf(";") + 1)
-            });
-        });
-        rl.on('close', function (line) {
-            generateCodes(resolve, error, mailArray, config, dataSafe);
+    return new Promise(function (resolve, error) {
+        mailParser_1.parseMails(config).then(function (res) {
+            generateCodes(resolve, error, res, config, dataSafe);
         });
     });
-    return pr;
 }
 exports.generateToken = generateToken;
 function generateCodes(resolve, error, mailArray, config, dataSafe) {
     return __awaiter(this, void 0, void 0, function () {
-        var codeArray, checkString, listString, i, code;
+        var pbar, position, codeArray, checkString, listString, i, code;
         return __generator(this, function (_a) {
+            console.log("\nGenerating codes");
+            pbar = new cliProgress.SingleBar({}, cliProgress.Presets.shades_classic);
+            pbar.start(mailArray.length, 0, {
+                speed: "N/A"
+            });
+            position = 0;
             codeArray = [];
             checkString = '';
             listString = '';
             for (i = 0; i < mailArray.length; i++) {
-                code = token_1.mkstring(4);
-                while (codeArray.includes(code)) {
+                code = '';
+                do {
                     code = token_1.mkstring(4);
-                }
+                } while ((config.force ? codeArray : __spreadArrays(codeArray, config.usedTokens)).includes(code));
                 codeArray.push(code);
                 checkString = checkString + "|" + code;
                 listString = listString + "\n" + code;
+                position++;
+                pbar.update(position);
             }
             checkString = checkString.substr(1);
             listString = listString.substr(1);
+            pbar.stop();
             try {
+                if (!fs.existsSync(path.dirname(config.outFileMatch))) {
+                    fs.mkdirSync(path.dirname(config.outFileMatch));
+                }
                 fs.writeFileSync(config.outFileMatch, checkString);
-                fs.writeFileSync(config.outFileCodes, listString);
             }
-            catch (error) {
-                error(error);
+            catch (err) {
+                error(err);
             }
             sendMails(resolve, error, mailArray, codeArray, config, dataSafe);
             return [2];
@@ -111,7 +122,7 @@ function generateCodes(resolve, error, mailArray, config, dataSafe) {
 }
 function sendMails(resolve, error, mailArray, codeArray, config, dataSafe) {
     return __awaiter(this, void 0, void 0, function () {
-        var mailserver, template, htmlSrc, i;
+        var mailserver, template, htmlSrc, pbar, position, i;
         return __generator(this, function (_a) {
             switch (_a.label) {
                 case 0:
@@ -124,26 +135,47 @@ function sendMails(resolve, error, mailArray, codeArray, config, dataSafe) {
                         console.error("Cannote read template file!");
                         error(error);
                     }
+                    console.log("\nSending mails");
+                    pbar = new cliProgress.SingleBar({}, cliProgress.Presets.shades_classic);
+                    pbar.start(mailArray.length, 0, {
+                        speed: "N/A"
+                    });
+                    position = 0;
                     shuffle_1.shuffleArray(mailArray);
                     shuffle_1.shuffleArray(codeArray);
+                    if (config.force) {
+                        dataSafe.clearVault();
+                    }
                     i = 0;
                     _a.label = 1;
                 case 1:
                     if (!(i < mailArray.length)) return [3, 4];
-                    dataSafe.pushData({
-                        name: mailArray[i].name,
-                        mail: mailArray[i].mail,
-                        code: codeArray[i]
-                    });
+                    if (!config.dryrun) {
+                        dataSafe.pushData({
+                            name: mailArray[i].name,
+                            mail: mailArray[i].mail,
+                            code: codeArray[i]
+                        });
+                    }
                     return [4, send(mailArray[i].name, mailArray[i].mail, codeArray[i], template, mailserver, config)];
                 case 2:
                     _a.sent();
+                    position++;
+                    pbar.update(position);
                     _a.label = 3;
                 case 3:
                     i++;
                     return [3, 1];
                 case 4:
-                    resolve(codeArray);
+                    pbar.stop();
+                    shuffle_1.shuffleArray(mailArray);
+                    shuffle_1.shuffleArray(codeArray);
+                    shuffle_1.shuffleArray(mailArray);
+                    shuffle_1.shuffleArray(codeArray);
+                    resolve({
+                        codes: config.force ? codeArray : (config.dryrun ? config.usedTokens : __spreadArrays(codeArray, config.usedTokens)),
+                        mails: config.force ? mailArray : (config.dryrun ? config.usedMails : __spreadArrays(mailArray, config.usedMails))
+                    });
                     return [2];
             }
         });
@@ -155,6 +187,13 @@ function send(name, mail, code, template, mailserver, config) {
         return __generator(this, function (_a) {
             switch (_a.label) {
                 case 0:
+                    if (!config.dryrun) return [3, 2];
+                    return [4, delay(100)];
+                case 1:
+                    _a.sent();
+                    console.log("\n\u001B[36m -> dryrun: would send to " + mail + "\u001B[0m");
+                    return [3, 6];
+                case 2:
                     html = template({
                         "name": name,
                         "mail": mail,
@@ -166,19 +205,26 @@ function send(name, mail, code, template, mailserver, config) {
                         subject: "Dein Zugangscode zur BJR Wahl",
                         html: html
                     };
-                    _a.label = 1;
-                case 1:
-                    _a.trys.push([1, 3, , 4]);
-                    return [4, mailserver.sendMail(mailOptions)];
-                case 2:
-                    _a.sent();
-                    return [3, 4];
+                    _a.label = 3;
                 case 3:
+                    _a.trys.push([3, 5, , 6]);
+                    return [4, mailserver.sendMail(mailOptions)];
+                case 4:
+                    _a.sent();
+                    return [3, 6];
+                case 5:
                     error_1 = _a.sent();
                     console.log("Error sendign mail to " + mail + " : " + error_1);
-                    return [3, 4];
-                case 4: return [2];
+                    return [3, 6];
+                case 6: return [2];
             }
         });
+    });
+}
+function delay(t, val) {
+    return new Promise(function (resolve) {
+        setTimeout(function () {
+            resolve(val);
+        }, t);
     });
 }
