@@ -10,19 +10,23 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@types/cli-progress": "^3.8.0",
     "@types/handlebars": "^4.1.0",
     "@types/node": "^14.11.1",
     "@types/nodemailer": "^6.4.0",
+    "@types/uuid": "^8.3.0",
+    "cli-progress": "^3.8.2",
     "crypto": "^1.0.1",
     "handlebars": "^4.7.6",
-    "nodemailer": "^6.4.11"
+    "nodemailer": "^6.4.11",
+    "uuid": "^8.3.0"
   },
   "pkg": {
     "scripts": "dist/**/*.js",
     "targets": [
       "node12"
     ],
-    "outputPath":"bin/"
+    "outputPath": "bin/"
   },
   "bin": "dist/index.js"
 }

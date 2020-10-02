@@ -1,8 +1,9 @@
 import * as fs from 'fs'
 import { generateToken } from './src/generate'
 import { SecureVault } from './src/vault'
+import { exit } from 'process';
 
-let configPath = "", action = -1, pubKey = "", privKey = "", safeFile = "", mails = "", html = "";
+let configPath = "", action = -1, pubKey = "", privKey = "", safeFile = "", mails = "", html = "", dryrun = false, force = false;
 // parse cli args
 for (let i = 1; i < process.argv.length ; i++){
     if (process.argv[i] === "--config"){
@@ -38,6 +39,8 @@ for (let i = 1; i < process.argv.length ; i++){
     if (process.argv[i] === "--send"){ action = 1 }
     if (process.argv[i] === "--decrypt"){ action = 2 }
     if (process.argv[i] === "--genkey"){ action = 3 }
+    if (process.argv[i] === "--dryrun"){ dryrun = true }
+    if (process.argv[i] === "--force"){ force = true }
 }
 if ( action == -1){ throw new Error("No Action specified") }
 if (!configPath &&  action == 1){ throw new Error("Config-Path not specified") }
@@ -54,17 +57,39 @@ if (action == 1){
     // load config 
     const confRaw = fs.readFileSync(configPath, 'utf8')
     let config:any = {}
+    let addition: boolean = false; // wenn nur weitere hinzugefügt werden
+    config = JSON.parse(confRaw)
+    // load safe if present
+    if (fs.existsSync(safeFile)){
+        dataSafe.loadData(safeFile);
+        config.usedTokens = dataSafe.getStorage(dataSafe.findStorage("usedTokens")[0].u);
+        config.usedMails = dataSafe.getStorage(dataSafe.findStorage("usedMails")[0].u);
+        addition = true;
+    }else{
+        config.usedTokens = [];
+        config.usedMails = [];
+    }
+
     try {
-        config = JSON.parse(confRaw)
         config.inFileMail = mails;
         config.htmlPath = html;
+        config.dryrun = dryrun;
+        config.force = force;
     } catch (error) {
         console.error("Cannote read config file!")
         process.exit(100);
     }
     generateToken(config,dataSafe).then(el =>  {
-        console.log(el)
-        dataSafe.saveData(safeFile);
+        if (addition){
+            dataSafe.setStorage(dataSafe.findStorage("usedTokens")[0].u,el.codes)
+            dataSafe.setStorage(dataSafe.findStorage("usedMails")[0].u,el.mails)
+            dataSafe.saveData(safeFile);
+        }else{
+            dataSafe.pushStorage('usedTokens',el.codes)
+            dataSafe.pushStorage('usedMails',el.mails)
+            dataSafe.saveData(safeFile);
+        }
+
     }).catch(err => console.error("error", err))
 }else if(action == 2){
     let dataSafe: SecureVault = new SecureVault(pubKey,privKey);
