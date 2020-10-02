@@ -99,16 +99,36 @@ ts-node .\index.ts --privkey private.key --decrypt --safe .\out\credentials.json
 ## Syntax
 
 ==> Schlüsselpaar Erzeugen
-`ts-node .\index.ts --privkey <path-to-private-key> --pubkey <path-to-public-key> --genkey
+`ts-node .\index.ts --privkey <path-to-private-key> --pubkey <path-to-public-key> --genkey`
 
-z.B. `ts-node .\index.ts --privkey private.key --pubkey public.key --genkey
+z.B. `ts-node .\index.ts --privkey private.key --pubkey public.key --genkey`
 
 ==> Codes Erzeugen und versenden
-`ts-node .\index.ts --config <path-to-config-key> --pubkey <path-to-public-key> --send --safe .\out\credentials.json --mails <path-to-mail-list> -html <path-to-html-template>
+`ts-node .\index.ts --config <path-to-config-key> --pubkey <path-to-public-key> --send --safe .\out\credentials.json --mails <path-to-mail-list> -html <path-to-html-template>`
 
-z.B. `ts-node .\index.ts --config config.json --pubkey public.key --send --safe .\out\credentials.json --mails mail.txt -html template.html
+z.B. `ts-node .\index.ts --config config.json --pubkey public.key --send --safe .\out\credentials.json --mails mail.txt -html template.html`
 
 ==> Safe entschlüsseln
-`ts-node .\index.ts --privkey <path-to-private-key> --decrypt --safe .\out\credentials.json
+`ts-node .\index.ts --privkey <path-to-private-key> --decrypt --safe .\out\credentials.json`
 
-z.B. `ts-node .\index.ts --privkey private.key --decrypt --safe .\out\credentials.json
+z.B. `ts-node .\index.ts --privkey private.key --decrypt --safe .\out\credentials.json`
+
+## Kompillierte Binaries
+Die Kompilierten Binaries sind für Linux, MacOS und Windoof verfügbar: [Binaries](https://gitlab.dennisgunia.de/dennisgunia/one-time-code-js/-/tree/master/bin)`
+
+Die befehle ändern sich wie folgt:
+
+==> Schlüsselpaar Erzeuge
+`./opentoken --privkey <path-to-private-key> --pubkey <path-to-public-key> --genkey`
+
+z.B. `./opentoken --privkey private.key --pubkey public.key --genkey`
+
+==> Codes Erzeugen und versenden
+`./opentoken --config <path-to-config-key> --pubkey <path-to-public-key> --send --safe .\out\credentials.json --mails <path-to-mail-list> -html <path-to-html-template>`
+
+z.B. `./opentoken --config config.json --pubkey public.key --send --safe .\out\credentials.json --mails mail.txt -html template.html`
+
+==> Safe entschlüsseln
+`./opentoken --privkey <path-to-private-key> --decrypt --safe .\out\credentials.json`
+
+z.B. `./opentoken --privkey private.key --decrypt --safe .\out\credentials.json`
