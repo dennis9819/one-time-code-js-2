@@ -38,7 +38,6 @@ async function generateCodes(resolve: (value?: genReturn) => void,error: (reason
 
     let codeArray: string[] = [];
     let checkString: string = '';
-    let listString: string = '';
 
     for(let i = 0; i < mailArray.length; i++){ // as many codes as adresses
         // check that codes are unique
@@ -48,12 +47,10 @@ async function generateCodes(resolve: (value?: genReturn) => void,error: (reason
         }while ( (config.force ? codeArray : [...codeArray, ...config.usedTokens]).includes(code))
         codeArray.push(code);
         checkString = `${checkString}|${code}`
-        listString = `${listString}\n${code}`
         position ++;
         pbar.update(position);
     }
     checkString = checkString.substr(1);
-    listString = listString.substr(1);
     pbar.stop();
     //write code lists
     try {

@@ -46,7 +46,6 @@ Der Ausfbau der mail.txt ist:
 ```
 
 Es werden drei Ausgaben erzeugt:
-- List aller Codes
 - Eine RegEx vorlage für alle Codes
 - Safe-Datei
 
