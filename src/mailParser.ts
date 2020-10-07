@@ -38,11 +38,17 @@ export function parseMails(config: any, dataSafe: SecureVault) {
                     // check if already exist
                     dataSafe.writeTransaction(`reading mail ${line.substr(0,ix)} from category ${currSection}`);
                     if (config.force || config.usedMails.filter((el: MLItem) => el.mail == line.substr(0,ix)).length == 0){
-                        mailArray.push({
-                            mail: line.substr(0,ix),
-                            name: line.substr(ix + 1)
-                        })
-                        curCounter ++;
+                        // check for duplicate
+                        if ( mailArray.filter((el: MLItem) => el.mail == line.substr(0,ix)).length == 0){
+                            mailArray.push({
+                                mail: line.substr(0,ix),
+                                name: line.substr(ix + 1)
+                            })
+                            curCounter ++;
+                        }else{
+                            dataSafe.writeTransaction(` -> duplicate mail. Skipping`);
+                            console.error(`Skipping ${line.substr(0,ix)}: Duplicate`)
+                        }
                     }else{
                         dataSafe.writeTransaction(` -> already exists. Skipping`);
                         console.error(`Skipping ${line.substr(0,ix)}: Already sent`)
