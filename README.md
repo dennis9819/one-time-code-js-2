@@ -44,8 +44,9 @@ Der Ausfbau der mail.txt ist:
 <mail>;<name>
 ...
 ```
+Doppelte Mailadressen werden erkannt und dedupliziert.
 
-Es werden drei Ausgaben erzeugt:
+Es werden zwei Ausgaben erzeugt:
 - Eine RegEx vorlage für alle Codes
 - Safe-Datei
 
@@ -95,29 +96,121 @@ ts-node .\index.ts --privkey private.key --decrypt --safe .\out\credentials.json
 }
 ```
 
-## Syntax
+## CLI
+Das Command-Line-Interface unterscheidet zwischen 3 Aktionen:
+ - key
+ - send
+ - vault
 
-==> Schlüsselpaar Erzeugen
-`ts-node .\index.ts --privkey <path-to-private-key> --pubkey <path-to-public-key> --genkey`
+Um Hilfe zu den Funktionen anzuzeigen verwenden sie folgendes Kommando:
+`./opentoken-linux <action> -h` oder `./opentoken-linux <action> --help`
 
-z.B. `ts-node .\index.ts --privkey private.key --pubkey public.key --genkey`
+### Aktion: key
+Die Aktion _key_ ist für das verwalten des RSA-Schlüsselpaars verantwortlich.
+Derzeit wird allerdings nur das generieren eines Schlüsselpaars unterstützt.
 
-==> Codes Erzeugen und versenden
-`ts-node .\index.ts --config <path-to-config-key> --pubkey <path-to-public-key> --send --safe credentials.json --mails <path-to-mail-list> -html <path-to-html-template>`
+Um ein schlüsselpaar zu generieren ist z.B. folgender Befehl zu verwenden:
+`./opentoken-linux key --pubkey <pfad zur datei> --privkey <pfad zur datei> --generate`
 
-Achtung: Es wird im Safe geprüft, ob Mailadressen bereits "bedient" wurden. Sollte dies der Fall sein, werden keine Mails an diese Adresse gesendet. Dies lässt sich mit dem Schalter `--force` umgehen.
+```
+Optional arguments:
+  -h, --help            Show this help message and exit.
+  -g, --generate        Send to all recipients, regardless if mail was 
+                        already sent. Overwrites safe with new codes.
+  -p PUBLICKEY, --pubkey PUBLICKEY
+                        Specify the public key to use
+  -r PRIVATEKEY, --privkey PRIVATEKEY
+                        Specify the private key to use
+```
 
-z.B. `ts-node .\index.ts --config config.json --pubkey public.key --send --safe credentials.json --mails mail.txt -html template.html`
+### Aktion: send
+Die Aktion _send_ ist für das genereiern der Codes und das Senden der Mails verantwortlich.
 
-==> Safe entschlüsseln
-`ts-node .\index.ts --privkey <path-to-private-key> --decrypt --safe credentials.json`
+Um ein schlüsselpaar zu generieren ist z.B. folgender Befehl zu verwenden:
+`./opentoken-linux key --pubkey <pfad zur datei> --config <pfad zur datei> --mails <pfad zur datei> --safe <pfad zur datei> --template <pfad zur datei>`
 
-z.B. `ts-node .\index.ts --privkey private.key --decrypt --safe credentials.json`
+Mit den schalter `--dryrun` werden keine Mails versendet. Zudem werden keine änderungen im Safe vorgenommen.
 
-### Erweiterte Schalter
+Mit den schalter `--force` werden alle Mails versendet. Alle Codes werden neu generiert und der Safe wird überschrieben.
 
- - `--dryrun` : Mails werden nicht versendet und der Safe wird nicht verändert.
- - `--force` : Alle Codes werden neu generiert und alle mails werden gesendet. Ignoriere bereits gesendete mails.
+Bereits gesendete mails und verwendete Codes werden im safe unverschlüsselt, jedoch ohne Zuordnung hinterlegt. Somit ist es möglich,
+nachträglich ohne Private-Key Teilnehmer hinzuzufügen, ohne alle Codes neu zu generieren und alle Mails neu zu versenden. Dies ist jedoch nicht empfohlen, da dadurch die Anonymität nicht gewährleistet werden kann.
+
+Sollte also bereits ein safe unter dem angegebenen Dateinamen existieren, wird dieser so weit wie möglich eingelesen. Sollte dieser nicht existieren, wird ein neuer, leerer Safe erstellt.
+
+```
+  -h, --help            Show this help message and exit.
+  -f, --force           Send to all recipients, regardless if mail was 
+                        already sent. Overwrites safe with new codes.
+  -d, --dryrun          Pretend to send mails. No outgoing SMTP connection. 
+                        Safe will not be updated.
+  -p PUBLICKEY, --pubkey PUBLICKEY
+                        Specify the public key to use
+  -c CONFIGFILE, --config CONFIGFILE
+                        Specify the config file to use
+  -m MAILLIST, --mails MAILLIST
+                        Specify the maillist to use
+  -s SAFEFILE, --safe SAFEFILE
+                        Specify the safe file to use
+  -t HTMLFILE, --template HTMLFILE
+                        Specify the template file to use
+```
+
+
+### Aktion: vault
+Die Aktion _vault_ ist für das verwalten des Safes verantwortlich.
+
+Folgende operationen sind derzeit möglich:
+ - auslesen der verschlüsselten und unverschlüsselten Daten
+ - revoken (rückziehen) von codes
+ - erzeugen einer codeliste aller gültigen codes
+
+**Auslesen der verschlüsselten und unverschlüsselten Daten**
+
+Das Auslesen ist mit folgendem Befehl möglich:
+`./opentoken-linux key --pubkey <pfad zur datei> --privkey <pfad zur datei> --safe <pfad zur datei>`
+
+Über das Parameter --filter, lässt sich einstellen, welcher Teil des Safes anzuzeigenist.
+
+**Revoken eines token**
+
+Falls ein token aus irgendwelchen Gründen als ungültig markiert werden soll, lässt sich dies mit folgendem Befehl im Safe hinterlegen:
+`./opentoken-linux key --pubkey <pfad zur datei> --privkey <pfad zur datei> --safe <pfad zur datei> --revoke <tokenid>`
+
+Der mit `--revoke` angegebene Token wird überprüft. Sollte dieser nicht existieren oder bereitz revoked sein, wird das Programm einfach beendet.
+Andernfalls wird dieser Token zur revokationList hinzugefügt. 
+
+**Erzeugen einer Code-Liste**
+
+Es kann auch eine Liste mit allen aktuell gültigen codes (zurückgezogene ausgenommen) erzeugt werden.
+Dazu kann folgendes Kommando verwendet werden:
+`./opentoken-linux key --pubkey <pfad zur datei> --privkey <pfad zur datei> --safe <pfad zur datei> --get-codes`
+
+Mit dem Parameter `--format` kann das Ausgabeformat angegeben werden. Zur auswahl stehen:
+ - json : Ausgabe als JSON fomratierter string
+ - regex : Ausgabe als vorformatierter RegEx String
+
+```
+  -h, --help            Show this help message and exit.
+  --filter {encrypted,unencrypted,all}
+                        Specify the data to show. This parameter may 
+                        alternatively be specified via the DATATYPE 
+                        environment variable. The default value is "all".
+  -p PUBLICKEY, --pubkey PUBLICKEY
+                        Specify the public key to use
+  -r PRIVATEKEY, --privkey PRIVATEKEY
+                        Specify the private key to use
+  -s SAFEFILE, --safe SAFEFILE
+                        Specify the safe file to use
+  -g, --get-codes       Get a list of all non revoked codes
+  --format {json,regex}
+                        Specify the output format of --get-codes. This 
+                        parameter may alternatively be specified via the 
+                        FORMAT environment variable. The default value is 
+                        "json".
+  --revoke TOKEN        Revokes a token
+```
+
 
 ## Gepackte Binaries
 Die gepackten Binaries sind für Linux, MacOS und Windoof verfügbar: [Binaries](https://gitlab.dennisgunia.de/dennisgunia/one-time-code-js/-/tree/master/bin)
@@ -190,3 +283,8 @@ Zudem werden die verwendeten Codes und die bereits gesendeten Mailadressen seper
 Dies ermöglicht es, nachträglich benutzer hinzuzufügen, ohne allen anderen neue Mails oder gar neue Codes zukommen lassen zu müssen.
 
 Es ist jedoch nocht empfohlen, nachträglich mails hinzuzufügen, da dies, abhängig von der Menge der gleichzeitig hinzugefügten Adressen eine grobe oder ggf. auch sehr genaue zuordnung zwischen Code und Mail der Nachzügler möglich ist. 
+
+## Logfile
+Opentoken schreibt automatisch eine Logfile mit dem Namen `vault.log` in das aktuelle Verzeichniss. In dieser wird der aktuelle fortschritt dokumentiert. Sollte die Ausführung unerwartet unterbrochen werden, lässt sich aus dieser ermitteln, welche mailadressen bereits verarbeitet wurden. 
+
+Zusätzlich werden die einzelnen verschlüsselten Safeeinträge in die Datei geschrieben. Diese können in einem zukünftigen Release mit Hilfe des Private-Keys in eine gültige Safe Datei umgewandelt werden. Diese kann genutzt werden, um nur die verbleibenden Mails zu generieren und zu verschicken.
