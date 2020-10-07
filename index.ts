@@ -1,7 +1,28 @@
+/**
+ * Dennis Gunia (c) 2020
+ *
+ * Entry point for opentoken. This file parses the cli parameters and runs the specified actions with the specified ßparameters.
+ * 
+ *
+ * @summary Open-Token entry point
+ * @author Dennis Gunia <info@dennisgunia.de>
+ * @license Licensed under the Apache License, Version 2.0 (the "License").
+ * 
+ * You may not use this file except in compliance with the License.
+ * A copy of the License is located at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * or in the "license" file accompanying this file. This file is distributed
+ * on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
+ * express or implied. See the License for the specific language governing
+ * permissions and limitations under the License.
+ */
+
 import * as fs from 'fs'
-import { generateToken } from './src/generate'
-import { SecureVault } from './src/vault'
-import { exit } from 'process';
+import { OTGlobalConfig } from './src/config.type';
+import { MLGenerator } from './src/generate';
+import { SVault } from './src/vault'
 
 let configPath = "", action = -1, pubKey = "", privKey = "", safeFile = "", mails = "", html = "", dryrun = false, force = false;
 // parse cli args
@@ -53,13 +74,13 @@ if (!html &&  action == 1){ throw new Error("Mail-Template not specified") }
 
 
 if (action == 1){
-    let dataSafe: SecureVault = new SecureVault(pubKey,privKey);
+    let dataSafe: SVault.SecureVault = new SVault.SecureVault(pubKey,privKey);
     dataSafe.writeTransaction(`Started ...`);
     // load config 
     const confRaw = fs.readFileSync(configPath, 'utf8')
-    let config:any = {}
+    let config: OTGlobalConfig = JSON.parse(confRaw)
     let addition: boolean = false; // wenn nur weitere hinzugefügt werden
-    config = JSON.parse(confRaw)
+    
     // load safe if present
     if (fs.existsSync(safeFile)){
         dataSafe.loadData(safeFile);
@@ -80,7 +101,7 @@ if (action == 1){
         console.error("Cannote read config file!")
         process.exit(100);
     }
-    generateToken(config,dataSafe).then(el =>  {
+    MLGenerator.generateToken(config,dataSafe).then(el =>  {
         if (addition){
             dataSafe.setStorage(dataSafe.findStorage("usedTokens")[0].u,el.codes)
             dataSafe.setStorage(dataSafe.findStorage("usedMails")[0].u,el.mails)
@@ -96,11 +117,11 @@ if (action == 1){
         console.error("error", err)
     })
 }else if(action == 2){
-    let dataSafe: SecureVault = new SecureVault(pubKey,privKey);
+    let dataSafe: SVault.SecureVault = new SVault.SecureVault(pubKey,privKey);
     dataSafe.loadData(safeFile);
     dataSafe.decryptData();
 }else if(action == 3){
-    SecureVault.genKey(pubKey,privKey);
+    SVault.SecureVault.genKey(pubKey,privKey);
 }
 
 

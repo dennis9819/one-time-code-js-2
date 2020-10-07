@@ -1,0 +1,316 @@
+<!doctype html>
+<html class="default no-js">
+<head>
+	<meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<title>opentoken</title>
+	<meta name="description" content="Documentation for opentoken">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<link rel="stylesheet" href="assets/css/main.css">
+</head>
+<body>
+<header>
+	<div class="tsd-page-toolbar">
+		<div class="container">
+			<div class="table-wrap">
+				<div class="table-cell" id="tsd-search" data-index="assets/js/search.json" data-base=".">
+					<div class="field">
+						<label for="tsd-search-field" class="tsd-widget search no-caption">Search</label>
+						<input id="tsd-search-field" type="text" />
+					</div>
+					<ul class="results">
+						<li class="state loading">Preparing search index...</li>
+						<li class="state failure">The search index is not available</li>
+					</ul>
+					<a href="index.html" class="title">opentoken</a>
+				</div>
+				<div class="table-cell" id="tsd-widgets">
+					<div id="tsd-filter">
+						<a href="#" class="tsd-widget options no-caption" data-toggle="options">Options</a>
+						<div class="tsd-filter-group">
+							<div class="tsd-select" id="tsd-filter-visibility">
+								<span class="tsd-select-label">All</span>
+								<ul class="tsd-select-list">
+									<li data-value="public">Public</li>
+									<li data-value="protected">Public/Protected</li>
+									<li data-value="private" class="selected">All</li>
+								</ul>
+							</div>
+							<input type="checkbox" id="tsd-filter-inherited" checked />
+							<label class="tsd-widget" for="tsd-filter-inherited">Inherited</label>
+							<input type="checkbox" id="tsd-filter-externals" checked />
+							<label class="tsd-widget" for="tsd-filter-externals">Externals</label>
+							<input type="checkbox" id="tsd-filter-only-exported" />
+							<label class="tsd-widget" for="tsd-filter-only-exported">Only exported</label>
+						</div>
+					</div>
+					<a href="#" class="tsd-widget menu no-caption" data-toggle="menu">Menu</a>
+				</div>
+			</div>
+		</div>
+	</div>
+	<div class="tsd-page-title">
+		<div class="container">
+			<ul class="tsd-breadcrumb">
+				<li>
+					<a href="globals.html">Globals</a>
+				</li>
+			</ul>
+			<h1>opentoken</h1>
+		</div>
+	</div>
+</header>
+<div class="container container-main">
+	<div class="row">
+		<div class="col-8 col-content">
+			<div class="tsd-panel tsd-typography">
+				<a href="#one-time-codejs" id="one-time-codejs" style="color: inherit; text-decoration: none;">
+					<h1>one-time-code.js</h1>
+				</a>
+				<p>Dies ist ein Programm zum erzeugen von anonymen Schlüsseln. Diese werden automatisch den Teilnehmern zugesendet.
+				Zudem wird ein asymetrisch verschlüsselter Safe erstellt.</p>
+				<a href="#zweck" id="zweck" style="color: inherit; text-decoration: none;">
+					<h2>Zweck</h2>
+				</a>
+				<p>Für ananoyme Wahlen muss sichergestellt werden, dass:</p>
+				<ol>
+					<li>Nur berechtigter Personen abstimmen können</li>
+					<li>Jeder Wähler nicht rückverfolgbar ist</li>
+					<li>Jeder Wähler nur einmal abstimmen kann</li>
+				</ol>
+				<p>Punkte 1. und 2. Lassen sich mit dieser Anwendug realisieren.</p>
+				<a href="#funktionsprinzip" id="funktionsprinzip" style="color: inherit; text-decoration: none;">
+					<h2>Funktionsprinzip</h2>
+				</a>
+				<p>Diese Anwendung muss auf zwei Systemen installiert sein. Beide Systeme dürfen nicht aufeinander Zugreifen können und müssen von verschiedenen Personen bedient werden.
+				Die beiden Systeme sind:</p>
+				<ul>
+					<li>System A &amp; Person A: Hier werden die Schlüssel erzeugt, benutzern zufällig zugewiesen und versendet. </li>
+					<li>System B &amp; Person B: Hier wird das Schlüsselpaar erzeugt und hier kann der Safe entschlüsselt werden.</li>
+					<li>Person C: Erhält von Person A die gültigen Codes und verifiziert die eingehenden Wahlzettel.</li>
+				</ul>
+				<p>Da Person A die SChlüssel-Nutzer Zuordnung zu keinem Zeitpunkt kennt, kann sie auch die selbe Person wie Person C sein.</p>
+				<a href="#schritt-1" id="schritt-1" style="color: inherit; text-decoration: none;">
+					<h3>Schritt 1</h3>
+				</a>
+				<p>Auf System B wird ein Schlüsselpaar erzeugt. Dies besteht aus dem Öffentlichen und Privaten schlüssel.</p>
+				<ul>
+					<li>Der Öffentliche schlüssel dient zur Verschlüsselung der Daten und kann nicht zum entschlüsseln verwendet werden.</li>
+					<li>Der Private schlüssel dient zur entschlüsselung des Safes und darf System B NIEMALS verlassen.</li>
+				</ul>
+				<p>Dazu wird z.B. folgender Befehl ausgeführt:
+				`ts-node .\index.ts --privkey private.key --pubkey public.key --genkey</p>
+				<p>Der erzeugte Öffentliche schlüssel muss an Person A übergeben werden. Diese nutzt den Schlüssel auf System A zum verschlüsseln des Passwortsafes.</p>
+				<a href="#schritt-2" id="schritt-2" style="color: inherit; text-decoration: none;">
+					<h3>Schritt 2</h3>
+				</a>
+				<p>Auf System A werden jetzt die Codes erzeugt und an die Nutzer versendet.
+				Die Nutzer-Schlüssel zuweisung erfolgt temporär auf System A, ist jedoch nicht auslesbar und wird unmittelbar im Passwortsafe gespeichert.</p>
+				<p>Person A führt folgenden Befehl aus:
+				`ts-node .\index.ts --config config.json --pubkey public.key --send --safe .\out\credentials.json --mails mail.txt -html template.html</p>
+				<p>Dabei wird eine Liste mit den Mails und Namen sowie der schlüssel übergeben.</p>
+				<p>Der Ausfbau der mail.txt ist:</p>
+				<pre><code><span class="hljs-tag">&lt;<span class="hljs-name">mail</span>&gt;</span>;<span class="hljs-tag">&lt;<span class="hljs-name">name</span>&gt;</span>
+<span class="hljs-tag">&lt;<span class="hljs-name">mail</span>&gt;</span>;<span class="hljs-tag">&lt;<span class="hljs-name">name</span>&gt;</span>
+...</code></pre>
+				<p>Es werden drei Ausgaben erzeugt:</p>
+				<ul>
+					<li>Eine RegEx vorlage für alle Codes</li>
+					<li>Safe-Datei</li>
+				</ul>
+				<p>Die Speicherorte der Code-Files werden in der config.json angegeben.
+				Der Safe wird an Person B weitergegeben. </p>
+				<p>Das Programm versendet automatisch Mails an alle Personen. Die HTML Vorlage wird mit --html angegeben.
+					In der Vorlage werden folgende Zeichenketten ersetzt:
+					<code>{{code}} =&gt; Genereirter Code </code>{{name}}
+					=&gt; Name
+					`{{mail}}
+				=&gt; Mail</p>
+				<p>Der SMTP-Relay-Server wird in der config.json angegeben.
+				Geenaue Doku: <a href="https://nodemailer.com/smtp/">https://nodemailer.com/smtp/</a></p>
+				<a href="#schritt-3" id="schritt-3" style="color: inherit; text-decoration: none;">
+					<h3>Schritt 3</h3>
+				</a>
+				<p>Ggf. muss der Safe entschlüsselt werden. Beispielfälle wären: </p>
+				<ul>
+					<li>Teilnehmer hat keinen Zugriff auf das Mailkonto</li>
+					<li>Teilnehmer hat seinen Code vergessen</li>
+					<li>Mail wurd durch den Spamfilter entfernt</li>
+				</ul>
+				<p>Person B muss dann mit dem Privaten Schlüssel den Safe auslesen und dem Teilnehmer seinen Code zukommen lassen.
+					Dazu muss golgender Befehl ausgeführt werden:
+				ts-node .\index.ts --privkey private.key --decrypt --safe .\out\credentials.json</p>
+				<a href="#config-datei" id="config-datei" style="color: inherit; text-decoration: none;">
+					<h2>Config-Datei</h2>
+				</a>
+				<pre><code>{
+    <span class="hljs-attr">&quot;mail&quot;</span>:{
+        <span class="hljs-attr">&quot;host&quot;</span>: <span class="hljs-string">&quot;&lt;mailserver&gt;&quot;</span>,
+        <span class="hljs-attr">&quot;port&quot;</span>: &lt;mailport&gt;,
+        <span class="hljs-attr">&quot;secure&quot;</span>: &lt;use ssl&gt;,
+        <span class="hljs-attr">&quot;auth&quot;</span>: {
+            <span class="hljs-attr">&quot;user&quot;</span>: <span class="hljs-string">&quot;&lt;mail-user&gt;&quot;</span>,
+            <span class="hljs-attr">&quot;pass&quot;</span>: <span class="hljs-string">&quot;&lt;mail-password&gt;&quot;</span>
+        },
+        <span class="hljs-attr">&quot;tls&quot;</span>: {
+            <span class="hljs-attr">&quot;rejectUnauthorized&quot;</span>: <span class="hljs-literal">false</span>,
+            <span class="hljs-attr">&quot;ciphers&quot;</span>:<span class="hljs-string">&quot;SSLv3&quot;</span>
+        }
+    },
+    <span class="hljs-attr">&quot;mailFrom&quot;</span>: <span class="hljs-string">&quot;&lt;absender name&gt;&quot;</span>,
+    <span class="hljs-attr">&quot;outFileMatch&quot;</span>: <span class="hljs-string">&quot;&lt;ausgabedatei regex&gt;&quot;</span>
+}</code></pre>
+				<a href="#syntax" id="syntax" style="color: inherit; text-decoration: none;">
+					<h2>Syntax</h2>
+				</a>
+				<p>==&gt; Schlüsselpaar Erzeugen
+				<code>ts-node .\index.ts --privkey &lt;path-to-private-key&gt; --pubkey &lt;path-to-public-key&gt; --genkey</code></p>
+				<p>z.B. <code>ts-node .\index.ts --privkey private.key --pubkey public.key --genkey</code></p>
+				<p>==&gt; Codes Erzeugen und versenden
+				<code>ts-node .\index.ts --config &lt;path-to-config-key&gt; --pubkey &lt;path-to-public-key&gt; --send --safe credentials.json --mails &lt;path-to-mail-list&gt; -html &lt;path-to-html-template&gt;</code></p>
+				<p>Achtung: Es wird im Safe geprüft, ob Mailadressen bereits &quot;bedient&quot; wurden. Sollte dies der Fall sein, werden keine Mails an diese Adresse gesendet. Dies lässt sich mit dem Schalter <code>--force</code> umgehen.</p>
+				<p>z.B. <code>ts-node .\index.ts --config config.json --pubkey public.key --send --safe credentials.json --mails mail.txt -html template.html</code></p>
+				<p>==&gt; Safe entschlüsseln
+				<code>ts-node .\index.ts --privkey &lt;path-to-private-key&gt; --decrypt --safe credentials.json</code></p>
+				<p>z.B. <code>ts-node .\index.ts --privkey private.key --decrypt --safe credentials.json</code></p>
+				<a href="#erweiterte-schalter" id="erweiterte-schalter" style="color: inherit; text-decoration: none;">
+					<h3>Erweiterte Schalter</h3>
+				</a>
+				<ul>
+					<li><code>--dryrun</code> : Mails werden nicht versendet und der Safe wird nicht verändert.</li>
+					<li><code>--force</code> : Alle Codes werden neu generiert und alle mails werden gesendet. Ignoriere bereits gesendete mails.</li>
+				</ul>
+				<a href="#gepackte-binaries" id="gepackte-binaries" style="color: inherit; text-decoration: none;">
+					<h2>Gepackte Binaries</h2>
+				</a>
+				<p>Die gepackten Binaries sind für Linux, MacOS und Windoof verfügbar: <a href="https://gitlab.dennisgunia.de/dennisgunia/one-time-code-js/-/tree/master/bin">Binaries</a></p>
+				<p>Die befehle ändern sich wie folgt:</p>
+				<p>==&gt; Schlüsselpaar Erzeuge
+				<code>./opentoken --privkey &lt;path-to-private-key&gt; --pubkey &lt;path-to-public-key&gt; --genkey</code></p>
+				<p>z.B. <code>./opentoken --privkey private.key --pubkey public.key --genkey</code></p>
+				<p>==&gt; Codes Erzeugen und versenden
+				<code>./opentoken --config &lt;path-to-config-key&gt; --pubkey &lt;path-to-public-key&gt; --send --safe .\out\credentials.json --mails &lt;path-to-mail-list&gt; -html &lt;path-to-html-template&gt;</code></p>
+				<p>z.B. <code>./opentoken --config config.json --pubkey public.key --send --safe .\out\credentials.json --mails mail.txt -html template.html</code></p>
+				<p>==&gt; Safe entschlüsseln
+				<code>./opentoken --privkey &lt;path-to-private-key&gt; --decrypt --safe .\out\credentials.json</code></p>
+				<p>z.B. <code>./opentoken --privkey private.key --decrypt --safe .\out\credentials.json</code></p>
+				<a href="#ausführen-des-quellcodes" id="ausführen-des-quellcodes" style="color: inherit; text-decoration: none;">
+					<h2>Ausführen des Quellcodes</h2>
+				</a>
+				<p>Der Sourcecode kann auch über ts-node ausgeführt werden.
+				Dazu ist Node.js Version 12 zu verwenden</p>
+				<p><code>nvm use 12</code></p>
+				<p>Zum Ausführen sind folgende npm Pakete notwendig:</p>
+				<ul>
+					<li>typescript</li>
+					<li>tslint</li>
+					<li>ts-node</li>
+				</ul>
+				<p>Installerien sie diese mit:
+				<code>npm install -g typescript tslint ts-node</code></p>
+				<p>Clonen sie dieses Repository auf ihren lokalen rechner und wechseln sie anschließend in dessen verzeichniss:</p>
+				<p><code>git clone https://gitlab.dennisgunia.de/dennisgunia/one-time-code-js.git</code></p>
+				<p><code>cd one-time-code-js</code></p>
+				<p>Installieren sie alle lokalen npm Pakete</p>
+				<p><code>npm install</code></p>
+				<p>Kopieren Sie die Config-Template und passen Sie die SMTP-Zugangsdaten an:</p>
+				<p><code>cp config.template.json config.json</code></p>
+				<p><code>vim config.json</code></p>
+				<p>Das Skript kann nun über <code>npm run-script exec</code> oder <code>ts-node index.js</code> ausgeführt werden.</p>
+				<a href="#packen-des-quellcodes" id="packen-des-quellcodes" style="color: inherit; text-decoration: none;">
+					<h2>Packen des Quellcodes</h2>
+				</a>
+				<p>Zum Packen des Quellcodes ist das npm-Paket <code>pkg</code> zu installieren:</p>
+				<p><code>npm install -g pkg</code></p>
+				<p>Anschließend wird der Code in JS transpiliert und durch pkg gepackt:</p>
+				<p><code>npm run-script build</code></p>
+				<p>Die Binaries werden in <code>./bin</code> gespeichert. Diese sind auch auf Systemen ohne node.js ausführbar.</p>
+				<a href="#was-landet-im-safe" id="was-landet-im-safe" style="color: inherit; text-decoration: none;">
+					<h2>Was landet im Safe?</h2>
+				</a>
+				<p>Im safe landen die verschlüsselten Zuordnungen zwischen Codes und Mailadressen.</p>
+				<p>Zudem werden die verwendeten Codes und die bereits gesendeten Mailadressen seperat voneinander und zufällig gemischt in Klartext gespeichert.</p>
+				<p>Dies ermöglicht es, nachträglich benutzer hinzuzufügen, ohne allen anderen neue Mails oder gar neue Codes zukommen lassen zu müssen.</p>
+				<p>Es ist jedoch nocht empfohlen, nachträglich mails hinzuzufügen, da dies, abhängig von der Menge der gleichzeitig hinzugefügten Adressen eine grobe oder ggf. auch sehr genaue zuordnung zwischen Code und Mail der Nachzügler möglich ist. </p>
+			</div>
+		</div>
+		<div class="col-4 col-menu menu-sticky-wrap menu-highlight">
+			<nav class="tsd-navigation primary">
+				<ul>
+					<li class="globals  ">
+						<a href="globals.html"><em>Globals</em></a>
+					</li>
+					<li class=" tsd-kind-namespace">
+						<a href="modules/mlgenerator.html">MLGenerator</a>
+					</li>
+					<li class=" tsd-kind-namespace">
+						<a href="modules/mlparser.html">MLParser</a>
+					</li>
+					<li class=" tsd-kind-namespace">
+						<a href="modules/svault.html">SVault</a>
+					</li>
+				</ul>
+			</nav>
+			<nav class="tsd-navigation secondary menu-sticky">
+				<ul class="before-current">
+					<li class=" tsd-kind-interface">
+						<a href="interfaces/otglobalconfig.html" class="tsd-kind-icon">OTGlobal<wbr>Config</a>
+					</li>
+					<li class=" tsd-kind-variable">
+						<a href="globals.html#action" class="tsd-kind-icon">action</a>
+					</li>
+					<li class=" tsd-kind-variable">
+						<a href="globals.html#configpath" class="tsd-kind-icon">config<wbr>Path</a>
+					</li>
+					<li class=" tsd-kind-variable">
+						<a href="globals.html#dryrun" class="tsd-kind-icon">dryrun</a>
+					</li>
+					<li class=" tsd-kind-variable">
+						<a href="globals.html#force" class="tsd-kind-icon">force</a>
+					</li>
+					<li class=" tsd-kind-variable">
+						<a href="globals.html#html" class="tsd-kind-icon">html</a>
+					</li>
+					<li class=" tsd-kind-variable">
+						<a href="globals.html#mails" class="tsd-kind-icon">mails</a>
+					</li>
+					<li class=" tsd-kind-variable">
+						<a href="globals.html#privkey" class="tsd-kind-icon">priv<wbr>Key</a>
+					</li>
+					<li class=" tsd-kind-variable">
+						<a href="globals.html#pubkey" class="tsd-kind-icon">pub<wbr>Key</a>
+					</li>
+					<li class=" tsd-kind-variable">
+						<a href="globals.html#safefile" class="tsd-kind-icon">safe<wbr>File</a>
+					</li>
+					<li class=" tsd-kind-function">
+						<a href="globals.html#delay" class="tsd-kind-icon">delay</a>
+					</li>
+					<li class=" tsd-kind-function">
+						<a href="globals.html#mkstringcn" class="tsd-kind-icon">mkstringCN</a>
+					</li>
+					<li class=" tsd-kind-function">
+						<a href="globals.html#shufflearray" class="tsd-kind-icon">shuffle<wbr>Array</a>
+					</li>
+				</ul>
+			</nav>
+		</div>
+	</div>
+</div>
+<footer class="with-border-bottom">
+	<div class="container">
+		<h2>Legend</h2>
+		<div class="tsd-legend-group">
+			<ul class="tsd-legend">
+				<li class="tsd-kind-property tsd-parent-kind-interface"><span class="tsd-kind-icon">Property</span></li>
+			</ul>
+		</div>
+	</div>
+</footer>
+<div class="container tsd-generator">
+	<p>Generated using <a href="https://typedoc.org/" target="_blank">TypeDoc</a></p>
+</div>
+<div class="overlay"></div>
+<script src="assets/js/main.js"></script>
+</body>
+</html>
