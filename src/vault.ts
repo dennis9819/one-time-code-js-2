@@ -59,13 +59,20 @@ export class SecureVault {
         }
         var asym_encrypted = crypto.publicEncrypt(this.safe.publicKey, buffer);
         const u = uuid.v4()
-        this.safe.items.push({
+
+        const item = {
             u,
             d: encrypted.toString('hex'),
             k: asym_encrypted.toString("base64"),
             iv: iv.toString('hex')
-        })
+        }
+        this.writeTransaction("push: " + JSON.stringify(item))
+        this.safe.items.push(item)
         return u;
+    }
+
+    writeTransaction(payload: string){
+        fs.appendFileSync('vault.log', `${payload}\n`);
     }
 
     async saveData(path: string): Promise<void>{

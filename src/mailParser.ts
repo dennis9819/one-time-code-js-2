@@ -1,13 +1,12 @@
-import { rejects } from "assert";
 import * as fs from 'fs'
-import { Console } from "console";
+import { SecureVault } from "./vault";
 
 export interface MLItem{
     mail: string;
     name: string;
 }
 
-export function parseMails(config: any) {
+export function parseMails(config: any, dataSafe: SecureVault) {
     return new Promise<MLItem[]>((resolve,reject) => {
         let mailArray: MLItem[] = [];
         let currSection: string = "global";
@@ -37,6 +36,7 @@ export function parseMails(config: any) {
                 const ix = line.indexOf(";")
                 if (ix !== -1){
                     // check if already exist
+                    dataSafe.writeTransaction(`reading mail ${line.substr(0,ix)} from category ${currSection}`);
                     if (config.force || config.usedMails.filter((el: MLItem) => el.mail == line.substr(0,ix)).length == 0){
                         mailArray.push({
                             mail: line.substr(0,ix),
@@ -44,6 +44,7 @@ export function parseMails(config: any) {
                         })
                         curCounter ++;
                     }else{
+                        dataSafe.writeTransaction(` -> already exists. Skipping`);
                         console.error(`Skipping ${line.substr(0,ix)}: Already sent`)
                     }
                 }else{

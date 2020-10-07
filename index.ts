@@ -54,6 +54,7 @@ if (!html &&  action == 1){ throw new Error("Mail-Template not specified") }
 
 if (action == 1){
     let dataSafe: SecureVault = new SecureVault(pubKey,privKey);
+    dataSafe.writeTransaction(`Started ...`);
     // load config 
     const confRaw = fs.readFileSync(configPath, 'utf8')
     let config:any = {}
@@ -89,8 +90,11 @@ if (action == 1){
             dataSafe.pushStorage('usedMails',el.mails)
             dataSafe.saveData(safeFile);
         }
-
-    }).catch(err => console.error("error", err))
+        dataSafe.writeTransaction(`Process exited successfully`);
+    }).catch(err => {
+        dataSafe.writeTransaction(`Process exited with error ${err}`);
+        console.error("error", err)
+    })
 }else if(action == 2){
     let dataSafe: SecureVault = new SecureVault(pubKey,privKey);
     dataSafe.loadData(safeFile);

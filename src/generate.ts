@@ -21,7 +21,7 @@ export interface genReturn{
 
 export function generateToken(config: any,dataSafe: SecureVault): Promise<genReturn>{
     return new Promise<genReturn>((resolve,error) => {
-        parseMails(config).then(res => {
+        parseMails(config, dataSafe).then(res => {
             generateCodes(resolve,error,res,config,dataSafe);
         })
     });
@@ -91,6 +91,7 @@ async function sendMails(resolve: (value?: genReturn) => void,error: (reason?: a
     if (config.force){dataSafe.clearVault();}
     for(let i = 0; i < mailArray.length; i++){
         // send mail
+        dataSafe.writeTransaction(`process: ${mailArray[i].mail}`);
         if (!config.dryrun){
             dataSafe.pushData({
                 name: mailArray[i].name, 
@@ -98,7 +99,7 @@ async function sendMails(resolve: (value?: genReturn) => void,error: (reason?: a
                 code: codeArray[i]
             })
         }
-        await send(mailArray[i].name, mailArray[i].mail, codeArray[i],template,mailserver,config);
+        await send(mailArray[i].name, mailArray[i].mail, codeArray[i],template,mailserver,config,dataSafe);
         position ++;
         pbar.update(position);
     }
@@ -114,7 +115,7 @@ async function sendMails(resolve: (value?: genReturn) => void,error: (reason?: a
 
 }
 
-async function send(name: string, mail: string, code: string,template: HandlebarsTemplateDelegate<any>,mailserver: Mail,config: any){
+async function send(name: string, mail: string, code: string,template: HandlebarsTemplateDelegate<any>,mailserver: Mail,config: any,dataSafe: SecureVault){
     if (config.dryrun){
         await delay(100);
         console.log(`\n\x1b[36m -> dryrun: would send to ${mail}\x1b[0m`); 
@@ -133,8 +134,10 @@ async function send(name: string, mail: string, code: string,template: Handlebar
         };
         try {
             await mailserver.sendMail(mailOptions);
+            dataSafe.writeTransaction(` -> mail sent`);
         } catch (error) {
             console.log(`Error sendign mail to ${mail} : ${error}`)
+            dataSafe.writeTransaction(` -> mail failed : ${error}`);
         }
     }
 }

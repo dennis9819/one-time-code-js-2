@@ -103,16 +103,16 @@ ts-node .\index.ts --privkey private.key --decrypt --safe .\out\credentials.json
 z.B. `ts-node .\index.ts --privkey private.key --pubkey public.key --genkey`
 
 ==> Codes Erzeugen und versenden
-`ts-node .\index.ts --config <path-to-config-key> --pubkey <path-to-public-key> --send --safe .\out\credentials.json --mails <path-to-mail-list> -html <path-to-html-template>`
+`ts-node .\index.ts --config <path-to-config-key> --pubkey <path-to-public-key> --send --safe credentials.json --mails <path-to-mail-list> -html <path-to-html-template>`
 
 Achtung: Es wird im Safe geprüft, ob Mailadressen bereits "bedient" wurden. Sollte dies der Fall sein, werden keine Mails an diese Adresse gesendet. Dies lässt sich mit dem Schalter `--force` umgehen.
 
-z.B. `ts-node .\index.ts --config config.json --pubkey public.key --send --safe .\out\credentials.json --mails mail.txt -html template.html`
+z.B. `ts-node .\index.ts --config config.json --pubkey public.key --send --safe credentials.json --mails mail.txt -html template.html`
 
 ==> Safe entschlüsseln
-`ts-node .\index.ts --privkey <path-to-private-key> --decrypt --safe .\out\credentials.json`
+`ts-node .\index.ts --privkey <path-to-private-key> --decrypt --safe credentials.json`
 
-z.B. `ts-node .\index.ts --privkey private.key --decrypt --safe .\out\credentials.json`
+z.B. `ts-node .\index.ts --privkey private.key --decrypt --safe credentials.json`
 
 ### Erweiterte Schalter
 
