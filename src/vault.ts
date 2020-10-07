@@ -24,7 +24,7 @@
 
 import * as crypto from 'crypto'
 import * as uuid from 'uuid'
-import path from 'path';
+import path, { resolve } from 'path';
 import * as fs from 'fs'
 import { generateKeyPair } from 'crypto';
 
@@ -172,8 +172,8 @@ export namespace SVault {
          * Prints data to console.
          * @return Resolves promise after decrypted
          */
-        async decryptData(): Promise<void>{
-            
+        async decryptData(): Promise<SecureVaultItem[]>{
+            let decrypted_list: SecureVaultItem[] = [];
             this.safe.items.forEach(el => {
                 // decrpyt key
                 let buffer = new Buffer(el.k, "base64");
@@ -187,9 +187,10 @@ export namespace SVault {
                 let decipher = crypto.createDecipheriv('aes-256-cbc', key, iv);
                 let decrypted = decipher.update(encryptedText);
                 decrypted = Buffer.concat([decrypted, decipher.final()]);
-                const obj = JSON.parse(decrypted.toString());
-                console.log(obj);
+                decrypted_list.push(JSON.parse(decrypted.toString()));
+
             })
+            return decrypted_list
         }
         /**
          * Generates RSA keypair.
@@ -259,6 +260,27 @@ export namespace SVault {
                 const data = this.storage.filter(el => el.u == suuid)[0];
                 let objJsonB64 = new Buffer(data.d, 'base64');
                 return JSON.parse(objJsonB64.toString('utf8'));
+            }
+        }
+
+        /**
+         * Gets all unencrypted data as array.
+         * @return Data from item.
+         */
+        getAllStorage(){
+            if (vaultVersion !== 'v1.2'){
+                throw new Error(`Storage not supported in ${vaultVersion}`);
+            }else{
+                let data_arr: StorageItem[] = [];
+                this.storage.forEach(el => {
+                    let objJsonB64 = new Buffer(el.d, 'base64');
+                    data_arr.push({
+                        u: el.u,
+                        t: el.t,
+                        d: JSON.parse(objJsonB64.toString('utf8'))
+                    });
+                })
+                return data_arr;
             }
         }
 

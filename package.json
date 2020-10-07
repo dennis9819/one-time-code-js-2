@@ -11,6 +11,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@rushstack/ts-command-line": "^4.7.3",
     "@types/cli-progress": "^3.8.0",
     "@types/handlebars": "^4.1.0",
     "@types/node": "^14.11.1",
